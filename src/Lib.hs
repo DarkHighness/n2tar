@@ -1,4 +1,4 @@
-module Lib where
+module Lib (compileHackASM) where
 
 import Control.Monad (void)
 import qualified Control.Monad.Trans.State as ST
@@ -6,10 +6,19 @@ import Data.Char (intToDigit, isDigit, isSpace)
 import Data.List (dropWhileEnd)
 import qualified Data.Map.Strict as M
 import Data.Sequence (takeWhileR)
-import Data.Void
+import Data.Void (Void)
 import Numeric (showIntAtBase)
 import Text.Megaparsec
-import Text.Megaparsec.Char
+  ( MonadParsec (eof, try),
+    Parsec,
+    choice,
+    oneOf,
+    optional,
+    runParser,
+    some,
+    (<|>),
+  )
+import Text.Megaparsec.Char (alphaNumChar, char, string)
 
 type Code = String
 
@@ -22,6 +31,14 @@ type SymbolMap = M.Map Symbol Int
 type CompileState = ST.State SymbolMap [BitCode]
 
 data Env = Env Int SymbolMap
+
+type Parser = Parsec Void String
+
+data Jump = JGT | JEQ | JGE | JLT | JNE | JLE | JMP deriving (Show, Eq)
+
+data Dest = M | D | MD | A | AM | AD | AMD deriving (Show, Eq)
+
+data Instruction = Instruction (Maybe Dest) String (Maybe Jump) deriving (Show, Eq)
 
 lineNumber :: Env -> Int
 lineNumber (Env x _) = x
@@ -79,14 +96,6 @@ parseCode code =
       ST.put $ Env cl' sm
 
       return (cl', c)
-
-type Parser = Parsec Void String
-
-data Jump = JGT | JEQ | JGE | JLT | JNE | JLE | JMP deriving (Show, Eq)
-
-data Dest = M | D | MD | A | AM | AD | AMD deriving (Show, Eq)
-
-data Instruction = Instruction (Maybe Dest) String (Maybe Jump) deriving (Show, Eq)
 
 parseDest :: Parser Dest
 parseDest =
@@ -218,48 +227,6 @@ pad16 x = replicate (16 - length x) '0' ++ x
 
 toBin :: Int -> BitCode
 toBin n = showIntAtBase 2 intToDigit n ""
-
--- format :: [Code] -> [(Int, Code)]
--- format = zip [0 ..] . filter (not . null) . map f
---   where
---     f [] = []
---     f ('/' : '/' : xs) = []
---     f (x : xs) | isSpace x = f xs
---     f (x : xs) = x : f xs
-
--- compileCode :: [(Int, Code)] -> ST.State (M.Map Symbol Int) [BitCode]
--- compileCode [] = return []
--- compileCode ((line, code) : xs) = do
---   bitcode <- compileInstruction line code
---   nextBitCode <- compileCode xs
---   return (bitcode : nextBitCode)
---   where
---     compileInstruction :: Int -> Code -> ST.State (M.Map Symbol Int) BitCode
---     compileInstruction l c = do
---       case c of
---         ('@' : xs) | all isDigit xs -> compileConstant xs
---         ('@' : xs) -> compileSymbol xs
---         x -> return x
-
---     compileConstant :: Code -> ST.State (M.Map Symbol Int) BitCode
---     compileConstant = return . pad16 . toBin . read
-
---     compileSymbol :: Code -> ST.State (M.Map Symbol Int) BitCode
---     compileSymbol c =
---       pad16 . toBin <$> case M.lookup c predefinedSymbols of
---         (Just x) -> return x
---         Nothing -> do
---           m <- ST.get
---           case M.lookup c m of
---             Nothing -> do
---               let mi = 16 + M.size m
---               let m' = M.insert c mi m
---               ST.put m'
---               return mi
---             (Just x') -> return x'
-
--- compile :: [(Int, Code)] -> [BitCode]
--- compile c = ST.evalState (compileCode c) predefinedSymbols
 
 compileHackASM :: Code -> BitCode
 compileHackASM = unlines . compile
