@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9ec52b6edb70696019f3707acfb6d8499483487123ced628dc85dd2d427945fc
+-- hash: 60346ecb451def2a2a615938e24ad54b5650428fbff901d928ae9deec56d90a6
 
 name:           n2tar
 version:        0.1.0.0
@@ -34,6 +34,9 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers >=0.6.5.1
+    , megaparsec >=4.0.0
+    , transformers >=0.5.6.2
   default-language: Haskell2010
 
 executable n2tar-exe
@@ -45,7 +48,10 @@ executable n2tar-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers >=0.6.5.1
+    , megaparsec >=4.0.0
     , n2tar
+    , transformers >=0.5.6.2
   default-language: Haskell2010
 
 test-suite n2tar-test
@@ -58,5 +64,8 @@ test-suite n2tar-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers >=0.6.5.1
+    , megaparsec >=4.0.0
     , n2tar
+    , transformers >=0.5.6.2
   default-language: Haskell2010
