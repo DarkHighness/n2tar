@@ -1,8 +1,8 @@
 module Main where
 
 import Data.List (dropWhileEnd)
-import Lib ( compileHackASM )
-import System.Environment ( getArgs )
+import Lib (compileHackASM)
+import System.Environment (getArgs)
 
 main :: IO ()
 main = do
